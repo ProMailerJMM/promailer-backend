@@ -31,12 +31,12 @@ def get_stripe_key():
     secret_key = os.environ.get('STRIPE_SECRET_KEY', '')
     if secret_key.startswith('sk_test_'):
         # Automatically serve correct test publishable key matching active account
-        pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcn17mZHCJtdY3TAsZgip83fUaNT7Pj4p0QTiXszonCqp5V5f4pBaEe783B00CptvU96N'
+        pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcm17mZHCJtdY3TAsZgip83fUaNT7PJ40GgTkXqzsepCcqSVFfnRc5g7300CWtuV0SN'
     else:
         # Serve live publishable key configured in Render dashboard
         pub_key = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
         if not pub_key:
-            pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcn17mZHCJtdY3TAsZgip83fUaNT7Pj4p0QTiXszonCqp5V5f4pBaEe783B00CptvU96N'
+            pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcm17mZHCJtdY3TAsZgip83fUaNT7PJ40GgTkXqzsepCcqSVFfnRc5g7300CWtuV0SN'
     return jsonify({'publishableKey': pub_key}), 200
 
 

@@ -26,6 +26,19 @@ def index():
         'gateway': 'ProMailer Payment & Release Delivery Service',
         'secure': True
     }), 200
+@app.route('/stripe-key', methods=['GET'])
+def get_stripe_key():
+    secret_key = os.environ.get('STRIPE_SECRET_KEY', '')
+    if secret_key.startswith('sk_test_'):
+        # Automatically serve correct test publishable key matching active account
+        pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcn17mZHCJtdY3TAsZgip83fUaNT7Pj4p0QTiXszonCqp5V5f4pBaEe783B00CptvU96N'
+    else:
+        # Serve live publishable key configured in Render dashboard
+        pub_key = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+        if not pub_key:
+            pub_key = 'pk_test_51TdVoPLdZBH4wUC5Q3tKB2k1C1A0Y16gcn17mZHCJtdY3TAsZgip83fUaNT7Pj4p0QTiXszonCqp5V5f4pBaEe783B00CptvU96N'
+    return jsonify({'publishableKey': pub_key}), 200
+
 
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment_intent():

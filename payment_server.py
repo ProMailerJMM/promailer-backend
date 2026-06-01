@@ -26,6 +26,13 @@ def index():
         'gateway': 'ProMailer Payment & Release Delivery Service',
         'secure': True
     }), 200
+
+@app.route('/version', methods=['GET'])
+def get_version():
+    return jsonify({
+        'version': '1.0.0',
+        'download_url': 'https://promailer.ca'
+    }), 200
 @app.route('/stripe-key', methods=['GET'])
 def get_stripe_key():
     # Dynamically serve the exact publishable key configured in your Render dashboard env variables

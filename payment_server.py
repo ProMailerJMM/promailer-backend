@@ -19,6 +19,14 @@ PLATFORM_FILES = {
     'linux': 'files/ProMailer-Linux.zip'
 }
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        'status': 'active',
+        'gateway': 'ProMailer Payment & Release Delivery Service',
+        'secure': True
+    }), 200
+
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment_intent():
     try:

@@ -70,8 +70,12 @@ def create_payment_intent():
 @app.route('/download', methods=['GET'])
 def download():
     try:
-        payment_intent_id = request.args.get('payment_intent_id')
-        platform = request.args.get('platform')
+        # Safe query parameter parsing
+        args = request.args or {}
+        payment_intent_id = args.get('payment_intent_id')
+        platform = args.get('platform')
+
+        print(f"[Payment Server] Download request received. ID: {payment_intent_id}, Platform: {platform}")
 
         if not payment_intent_id or not platform:
             return 'Missing required download parameters', 400
@@ -80,10 +84,46 @@ def download():
             return 'Invalid platform selected', 400
 
         # Retrieve PaymentIntent details from Stripe
-        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        try:
+            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        except Exception as stripe_err:
+            print(f"[Payment Server] Stripe retrieve failed: {stripe_err}")
+            return f"Stripe retrieval failed: {str(stripe_err)}", 400
+
+        # Safe status and metadata checks
+        status = getattr(intent, 'status', None) or intent.get('status')
+        
+        # Safely extract metadata regardless of Stripe SDK version (handles dict, StripeObject, or None)
+        metadata = {}
+        intent_metadata = getattr(intent, 'metadata', None) or intent.get('metadata')
+        if intent_metadata:
+            if hasattr(intent_metadata, 'get'):
+                metadata = intent_metadata
+            elif isinstance(intent_metadata, dict):
+                metadata = intent_metadata
+            else:
+                try:
+                    metadata = dict(intent_metadata)
+                except Exception:
+                    pass
+
+        platform_meta = None
+        if hasattr(metadata, 'get'):
+            platform_meta = metadata.get('platform')
+        elif isinstance(metadata, dict):
+            platform_meta = metadata.get('platform')
+        
+        # Double check dictionary fallback
+        if not platform_meta:
+            try:
+                platform_meta = intent['metadata']['platform']
+            except Exception:
+                pass
+
+        print(f"[Payment Server] Verification - Status: {status}, Metadata Platform: {platform_meta}, Target: {platform}")
 
         # Secure verification: confirm success status and metadata parameters
-        if intent.status == 'succeeded' and intent.metadata.get('platform') == platform:
+        if status == 'succeeded' and platform_meta == platform:
             file_path = PLATFORM_FILES[platform]
             if os.path.exists(file_path):
                 return send_file(
@@ -92,12 +132,16 @@ def download():
                     download_name=os.path.basename(file_path)
                 )
             else:
+                print(f"[Payment Server] File not found: {file_path}")
                 return 'Requested release package not found on server', 404
         else:
+            print(f"[Payment Server] Verification failed. Status: {status}, Meta: {platform_meta}")
             return 'Payment verification failed', 403
 
     except Exception as e:
-        print(f"[Payment Server] Error verifying download: {e}")
+        import traceback
+        print(f"[Payment Server] Error verifying download:")
+        traceback.print_exc()
         return f"Server Error: {str(e)}", 500
 
 if __name__ == '__main__':
